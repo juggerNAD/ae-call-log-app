@@ -29,7 +29,7 @@ st.markdown("""
 """, unsafe_allow_html=True)
 
 COLUMNS = ["Closer Name", "Meeting ID", "Topic", "Start Time", "Duration (min)",
-           "Recording Link", "Doc URL", "Logged At", "Prospect Name", "Outcome"]
+           "Recording Link", "Doc URL", "Logged At", "Prospect Name", "Outcome", "Amount Collected"]
 
 BADGE_MAP = {
     "Closed/Deposit": "badge-closed",
@@ -43,11 +43,13 @@ BADGE_MAP = {
 def fetch_all_rows():
     access_token = get_google_access_token()
     res = requests.get(
-        f"https://sheets.googleapis.com/v4/spreadsheets/{SPREADSHEET_ID}/values/Sheet1!A2:J",
+        f"https://sheets.googleapis.com/v4/spreadsheets/{SPREADSHEET_ID}/values/Sheet1!A2:K",
         headers={"Authorization": f"Bearer {access_token}"},
     )
     res.raise_for_status()
-    return res.json().get("values", [])
+    rows = res.json().get("values", [])
+    padded_rows = [row + [""] * (len(COLUMNS) - len(row)) for row in rows]
+    return padded_rows
 
 
 @st.cache_data(ttl=60)
@@ -128,7 +130,7 @@ with tab1:
             lambda u: f'<a href="{u}" target="_blank">Watch ↗</a>' if u else ""
         )
 
-        show_cols = ["Closer Name", "Prospect Name", "Start Time", "Duration (min)", "Outcome", "Transcript", "Recording"]
+        show_cols = ["Closer Name", "Prospect Name", "Start Time", "Duration (min)", "Outcome", "Amount Collected", "Transcript", "Recording"]
         st.markdown(
             display_df[show_cols].to_html(escape=False, index=False, classes="styled-table"),
             unsafe_allow_html=True,
@@ -190,4 +192,24 @@ with tab2:
             st.success(f"✅ Done — {total} new call(s) logged.")
         else:
             st.info("✅ Done — no new calls found.")
+        st.cache_data.clear()
+
+    st.markdown("---")
+    st.subheader("Match closed deals")
+    st.caption("Pulls #new-deal Slack messages and matches them to existing call rows for Outcome + Amount Collected.")
+
+    if st.button("💰 Match Deals Now"):
+        from match_deals import match_and_update_deals
+
+        log_box2 = st.container(height=300)
+        logs2 = []
+
+        def log2(msg):
+            logs2.append(msg)
+            log_box2.text("\n".join(logs2))
+
+        with st.spinner("Matching deals..."):
+            matched, unmatched = match_and_update_deals(log=log2)
+
+        st.success(f"✅ Done — {matched} matched, {unmatched} unmatched/ambiguous.")
         st.cache_data.clear()
