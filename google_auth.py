@@ -8,7 +8,9 @@ try:
     import streamlit as st
     SUPABASE_URL = st.secrets.get("GOOGLE_SUPABASE_URL", os.getenv("GOOGLE_SUPABASE_URL"))
     SUPABASE_SERVICE_KEY = st.secrets.get("GOOGLE_SUPABASE_SERVICE_KEY", os.getenv("GOOGLE_SUPABASE_SERVICE_KEY"))
-except Exception:
+    st.write("DEBUG: Loaded from secrets, SUPABASE_URL is:", SUPABASE_URL)
+except Exception as e:
+    st.write("DEBUG: Exception while loading secrets:", str(e))
     SUPABASE_URL = os.getenv("GOOGLE_SUPABASE_URL")
     SUPABASE_SERVICE_KEY = os.getenv("GOOGLE_SUPABASE_SERVICE_KEY")
 
