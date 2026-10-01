@@ -1,11 +1,21 @@
 import os
 import requests
+import base64
 from dotenv import load_dotenv
 
 load_dotenv()
 
-SUPABASE_URL = os.getenv("ZOOM_SUPABASE_URL")
-SUPABASE_SERVICE_KEY = os.getenv("ZOOM_SUPABASE_SERVICE_KEY")
+try:
+    import streamlit as st
+    SUPABASE_URL = st.secrets.get("ZOOM_SUPABASE_URL", os.getenv("ZOOM_SUPABASE_URL"))
+    SUPABASE_SERVICE_KEY = st.secrets.get("ZOOM_SUPABASE_SERVICE_KEY", os.getenv("ZOOM_SUPABASE_SERVICE_KEY"))
+    ZOOM_CLIENT_ID_DEFAULT = st.secrets.get("ZOOM_CLIENT_ID", os.getenv("ZOOM_CLIENT_ID"))
+    ZOOM_CLIENT_SECRET_DEFAULT = st.secrets.get("ZOOM_CLIENT_SECRET", os.getenv("ZOOM_CLIENT_SECRET"))
+except Exception:
+    SUPABASE_URL = os.getenv("ZOOM_SUPABASE_URL")
+    SUPABASE_SERVICE_KEY = os.getenv("ZOOM_SUPABASE_SERVICE_KEY")
+    ZOOM_CLIENT_ID_DEFAULT = os.getenv("ZOOM_CLIENT_ID")
+    ZOOM_CLIENT_SECRET_DEFAULT = os.getenv("ZOOM_CLIENT_SECRET")
 
 
 def get_zoom_access_token():
@@ -19,8 +29,8 @@ def get_zoom_access_token():
     res.raise_for_status()
     refresh_token = res.json()[0]["refresh_token"]
 
-    zoom_client_id = os.getenv("ZOOM_CLIENT_ID")
-    zoom_client_secret = os.getenv("ZOOM_CLIENT_SECRET")
+    zoom_client_id = ZOOM_CLIENT_ID_DEFAULT
+    zoom_client_secret = ZOOM_CLIENT_SECRET_DEFAULT
 
     import base64
     basic_auth = base64.b64encode(f"{zoom_client_id}:{zoom_client_secret}".encode()).decode()

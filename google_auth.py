@@ -4,8 +4,13 @@ from dotenv import load_dotenv
 
 load_dotenv()
 
-SUPABASE_URL = os.getenv("GOOGLE_SUPABASE_URL")
-SUPABASE_SERVICE_KEY = os.getenv("GOOGLE_SUPABASE_SERVICE_KEY")
+try:
+    import streamlit as st
+    SUPABASE_URL = st.secrets.get("GOOGLE_SUPABASE_URL", os.getenv("GOOGLE_SUPABASE_URL"))
+    SUPABASE_SERVICE_KEY = st.secrets.get("GOOGLE_SUPABASE_SERVICE_KEY", os.getenv("GOOGLE_SUPABASE_SERVICE_KEY"))
+except Exception:
+    SUPABASE_URL = os.getenv("GOOGLE_SUPABASE_URL")
+    SUPABASE_SERVICE_KEY = os.getenv("GOOGLE_SUPABASE_SERVICE_KEY")
 
 
 def get_google_access_token():
